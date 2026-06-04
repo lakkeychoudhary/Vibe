@@ -1,0 +1,28 @@
+{
+  "name": "Vibe — Offline Music Studio",
+  "short_name": "Vibe",
+  "description": "Real instruments. Real touch. Real breath. A pocket music studio that runs offline.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FBF3E8",
+  "theme_color": "#C97B5C",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    { "src": "screenshots/landing.png", "sizes": "1280x800", "type": "image/png" }
+  ]
+}
