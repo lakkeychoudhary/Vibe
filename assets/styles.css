@@ -2,6 +2,7 @@
    Vibe — Warm Sunset palette • Kalam (handwriting) + Nunito (body)
    ============================================================ */
 :root {
+  /* App color palette setup */
   --cream: #FBF3E8;
   --cream-2: #F7E9D4;
   --peach: #F5C9A1;
