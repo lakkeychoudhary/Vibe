@@ -57,13 +57,33 @@ function GuitarScreen({ onBack, mode }) {
     }
   });
 
+  // Keyboard controls
+  useEffect(() => {
+    if (mode === 'auto') return;
+    const stringKeys = ['1', '2', '3', '4', '5', '6'];
+    const chordKeys = ['q', 'w', 'e', 'r', 't', 'y', 'u'];
+    const handle = (e) => {
+      const key = e.key.toLowerCase();
+      const sIdx = stringKeys.indexOf(key);
+      if (sIdx >= 0 && strings[sIdx]) {
+        pluckString(strings[sIdx]);
+      }
+      const cIdx = chordKeys.indexOf(key);
+      if (cIdx >= 0 && chords[cIdx]) {
+        strumChord(chords[cIdx]);
+      }
+    };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [mode, strings, chords]);
+
   return (
     <div className="screen player fade-in">
       <div className="player-head">
         <BackButton onClick={onBack} />
         <div style={{ flex: 1 }}>
           <div className="brand-name" style={{ fontSize: 32 }}>Guitar</div>
-          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'sing · strings echo your note' : 'pluck strings or tap a chord to strum'}</div>
+          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'sing · strings echo your note' : 'pluck strings [1-6] or strum chords [Q-U]'}</div>
         </div>
         <div className="controls-row">
           <ScalePicker root={root} scale={scale} onRoot={setRoot} onScale={setScale} />
@@ -73,24 +93,29 @@ function GuitarScreen({ onBack, mode }) {
       <div className="stage">
         <div className="guitar-stage">
           <div className="strings">
-            {strings.map(s => (
+            {strings.map((s, i) => (
               <div
                 key={s.midi}
                 className={`string ${s.thickness} ${activeStr === s.midi ? 'playing' : ''}`}
                 onPointerDown={() => pluckString(s)}
               >
-                <span className="pluck-label">{s.name}</span>
+                <span className="pluck-label">{s.name} <span style={{ fontSize: 10, opacity: 0.5 }}>({i + 1})</span></span>
                 <span className="wire" />
               </div>
             ))}
           </div>
           <div className="chord-row">
-            {chords.map(c => (
-              <button key={c.name} className="chord-btn" onClick={() => strumChord(c)}>{c.name}</button>
+            {chords.map((c, i) => (
+              <button key={c.name} className="chord-btn" onClick={() => strumChord(c)} style={{ position: 'relative', paddingBottom: 16 }}>
+                {c.name}
+                <span style={{ fontSize: 9, position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)', opacity: 0.5 }}>
+                  {['Q','W','E','R','T','Y','U'][i]}
+                </span>
+              </button>
             ))}
           </div>
           <div className="hand center" style={{ fontSize: 18, color: 'var(--ink-soft)' }}>
-            ↑ pluck a string &nbsp;·&nbsp; tap a chord to strum
+            ↑ pluck strings [1-6] &nbsp;·&nbsp; tap chords [Q-U] to strum
           </div>
         </div>
       </div>
@@ -161,13 +186,72 @@ function ViolinScreen({ onBack, mode }) {
     }
   }, [mode]);
 
+  // Keyboard controls
+  useEffect(() => {
+    if (mode === 'auto') return;
+    const notes = window.VibeAudio.scaleNotes(root, scale, 4)
+      .concat(window.VibeAudio.scaleNotes(root, scale, 5));
+    const map = 'asdfghjkl;\''.split('');
+    const activeKeys = new Set();
+    
+    const handleKeyDown = (e) => {
+      if (e.repeat) return;
+      const key = e.key.toLowerCase();
+      const i = map.indexOf(key);
+      if (i >= 0 && notes[i]) {
+        const midi = notes[i];
+        setCurrentMidi(midi);
+        setBowing(true);
+        activeKeys.add(key);
+        if (!voiceRef.current) {
+          voiceRef.current = window.VibeAudio.createBowVoice(midi);
+          voiceRef.current.setVolume(0.7);
+        } else {
+          voiceRef.current.setFreq(window.VibeAudio.noteToFreq(midi));
+        }
+      }
+    };
+    
+    const handleKeyUp = (e) => {
+      const key = e.key.toLowerCase();
+      const i = map.indexOf(key);
+      if (i >= 0) {
+        activeKeys.delete(key);
+        if (activeKeys.size === 0) {
+          setBowing(false);
+          if (voiceRef.current) {
+            voiceRef.current.stop();
+            voiceRef.current = null;
+          }
+        } else {
+          const lastKey = Array.from(activeKeys).pop();
+          const lastIdx = map.indexOf(lastKey);
+          if (lastIdx >= 0 && notes[lastIdx]) {
+            const midi = notes[lastIdx];
+            setCurrentMidi(midi);
+            if (voiceRef.current) {
+              voiceRef.current.setFreq(window.VibeAudio.noteToFreq(midi));
+            }
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [mode, root, scale]);
+
   return (
     <div className="screen player fade-in">
       <div className="player-head">
         <BackButton onClick={onBack} />
         <div style={{ flex: 1 }}>
           <div className="brand-name" style={{ fontSize: 32 }}>Violin</div>
-          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'sing · the bow follows your voice' : 'press &amp; drag across the bow strip'}</div>
+          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'sing · the bow follows your voice' : 'drag bow or use keys [A-';]'}</div>
         </div>
         <div className="controls-row">
           <ScalePicker root={root} scale={scale} onRoot={setRoot} onScale={setScale} />
@@ -207,7 +291,7 @@ function ViolinScreen({ onBack, mode }) {
             </div>
           </div>
           <p className="dimmed center" style={{ maxWidth: 540 }}>
-            Hold and slide your finger to bow. The note follows your position across the {root} {scale} scale.
+            Hold and slide your finger to bow, or press keys [A-';] to bow notes of the {root} {scale} scale.
           </p>
         </div>
       </div>
@@ -271,13 +355,28 @@ function TablaScreen({ onBack, mode }) {
     }
   });
 
+  // Keyboard controls
+  useEffect(() => {
+    if (mode === 'auto') return;
+    const map = ['a', 's', 'd', 'f', 'g', 'h'];
+    const handle = (e) => {
+      if (e.repeat) return;
+      const i = map.indexOf(e.key.toLowerCase());
+      if (i >= 0 && pads[i]) {
+        tap(pads[i].id);
+      }
+    };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [mode, pads]);
+
   return (
     <div className="screen player fade-in">
       <div className="player-head">
         <BackButton onClick={onBack} />
         <div style={{ flex: 1 }}>
           <div className="brand-name" style={{ fontSize: 32 }}>Tabla</div>
-          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'beat with your voice · every sound hits a bol' : 'tap the bols · or let teentaal play itself'}</div>
+          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'beat with your voice · every sound hits a bol' : 'tap bols [A-H] · or let teentaal play'}</div>
         </div>
         <div className="controls-row">
           {mode === 'auto' && <AutoBadge active={autoActive} note={hit || '—'} />}
@@ -288,7 +387,7 @@ function TablaScreen({ onBack, mode }) {
       </div>
       <div className="stage">
         <div className="drum-pads">
-          {pads.map(p => (
+          {pads.map((p, i) => (
             <div
               key={p.id}
               className={`drum-pad ${hit === p.id ? 'hit' : ''}`}
@@ -296,7 +395,7 @@ function TablaScreen({ onBack, mode }) {
               onPointerDown={() => tap(p.id)}
             >
               {p.label}
-              <span className="sub">{p.id.replace('tabla-', '')}</span>
+              <span className="sub">{p.id.replace('tabla-', '')} ({['A', 'S', 'D', 'F', 'G', 'H'][i]})</span>
             </div>
           ))}
         </div>
@@ -354,13 +453,28 @@ function SitarScreen({ onBack, mode }) {
     }
   });
 
+  // Keyboard controls
+  useEffect(() => {
+    if (mode === 'auto') return;
+    const map = 'asdfghjkl;\''.split('');
+    const handle = (e) => {
+      if (e.repeat) return;
+      const i = map.indexOf(e.key.toLowerCase());
+      if (i >= 0 && notes[i]) {
+        pluck(notes[i]);
+      }
+    };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [mode, notes]);
+
   return (
     <div className="screen player fade-in">
       <div className="player-head">
         <BackButton onClick={onBack} />
         <div style={{ flex: 1 }}>
           <div className="brand-name" style={{ fontSize: 32 }}>Sitar</div>
-          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'sing · the strings echo your raag' : 'resonant · buzzy · with a tanpura drone'}</div>
+          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'sing · the strings echo your raag' : 'play notes [A-';] · tanpura drone'}</div>
         </div>
         <div className="controls-row">
           <ScalePicker root={root} scale={scale} onRoot={setRoot} onScale={setScale} />
@@ -378,10 +492,13 @@ function SitarScreen({ onBack, mode }) {
               <button
                 key={i}
                 className={`chord-btn ${pressed === m ? 'active' : ''}`}
-                style={{ minWidth: 70, fontSize: 26 }}
+                style={{ minWidth: 70, fontSize: 26, position: 'relative', paddingBottom: 16 }}
                 onPointerDown={() => pluck(m)}
               >
                 {window.VibeAudio.noteName(m).replace(/\d/, '')}
+                <span style={{ fontSize: 9, position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)', opacity: 0.5 }}>
+                  {['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'"][i]}
+                </span>
               </button>
             ))}
           </div>
@@ -434,6 +551,22 @@ function HarmoniumScreen({ onBack, mode }) {
       setTimeout(() => setActive(p => { const n = new Set(p); n.delete(snapped); return n; }), 300);
     }
   });
+
+  // Keyboard controls
+  useEffect(() => {
+    if (mode === 'auto') return;
+    const map = 'asdfghjkl;\''.split('');
+    const handle = (e) => {
+      if (e.repeat) return;
+      const i = map.indexOf(e.key.toLowerCase());
+      if (i >= 0 && whites[i]) {
+        press(whites[i]);
+      }
+    };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [mode, whites]);
+
   const whitePct = 100 / whites.length;
   return (
     <div className="screen player fade-in">
@@ -441,7 +574,7 @@ function HarmoniumScreen({ onBack, mode }) {
         <BackButton onClick={onBack} />
         <div style={{ flex: 1 }}>
           <div className="brand-name" style={{ fontSize: 32 }}>Harmonium</div>
-          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'sing · the reeds match your note' : 'reedy &amp; warm · perfect for bhajan'}</div>
+          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'sing · the reeds match your note' : 'reedy &amp; warm · play keys [A-';]'}</div>
         </div>
         <div className="controls-row">
           {mode === 'auto' && <>
@@ -465,7 +598,12 @@ function HarmoniumScreen({ onBack, mode }) {
                   key={m}
                   className={`key-white ${active.has(m) ? 'active' : ''}`}
                   onPointerDown={(e) => { e.preventDefault(); press(m); }}
-                />
+                  style={{ position: 'relative' }}
+                >
+                  <span style={{ position: 'absolute', bottom: 4, fontSize: 10, opacity: 0.5, left: '50%', transform: 'translateX(-50%)', fontWeight: 'bold' }}>
+                    {['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'"][i]}
+                  </span>
+                </div>
               ))}
               {Array.from({ length: 2 }).flatMap((_, o) =>
                 blackWhiteIdx.map((wi, j) => {
@@ -544,13 +682,28 @@ function DrumsScreen({ onBack, mode }) {
     }
   });
 
+  // Keyboard controls
+  useEffect(() => {
+    if (mode === 'auto') return;
+    const map = ['a', 's', 'd', 'f'];
+    const handle = (e) => {
+      if (e.repeat) return;
+      const i = map.indexOf(e.key.toLowerCase());
+      if (i >= 0 && pads[i]) {
+        tap(pads[i].id);
+      }
+    };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [mode, pads]);
+
   return (
     <div className="screen player fade-in">
       <div className="player-head">
         <BackButton onClick={onBack} />
         <div style={{ flex: 1 }}>
           <div className="brand-name" style={{ fontSize: 32 }}>Drum Kit</div>
-          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'beatbox · the kit hits with your voice' : 'tap pads or play the loop'}</div>
+          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'beatbox · the kit hits with your voice' : 'tap pads [A-F] or play loop'}</div>
         </div>
         <div className="controls-row">
           {mode === 'auto' && <AutoBadge active={autoActive} note={hit || '—'} />}
@@ -566,7 +719,7 @@ function DrumsScreen({ onBack, mode }) {
       </div>
       <div className="stage">
         <div className="drum-pads">
-          {pads.map(p => (
+          {pads.map((p, i) => (
             <div
               key={p.id}
               className={`drum-pad ${hit === p.id ? 'hit' : ''}`}
@@ -574,6 +727,7 @@ function DrumsScreen({ onBack, mode }) {
               onPointerDown={() => tap(p.id)}
             >
               {p.label}
+              <span className="sub">{['A', 'S', 'D', 'F'][i]}</span>
             </div>
           ))}
         </div>
@@ -631,13 +785,28 @@ function DholakScreenComponent({ onBack, mode }) {
     }
   });
 
+  // Keyboard controls
+  useEffect(() => {
+    if (mode === 'auto') return;
+    const map = ['a', 's', 'd', 'f'];
+    const handle = (e) => {
+      if (e.repeat) return;
+      const i = map.indexOf(e.key.toLowerCase());
+      if (i >= 0 && pads[i]) {
+        tap(pads[i].id);
+      }
+    };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [mode, pads]);
+
   return (
     <div className="screen player fade-in">
       <div className="player-head">
         <BackButton onClick={onBack} />
         <div style={{ flex: 1 }}>
           <div className="brand-name" style={{ fontSize: 32 }}>Dholak</div>
-          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'beat with your voice · dholak follows' : 'two heads · boom on left, slap on right'}</div>
+          <div className="dimmed" style={{ fontSize: 13 }}>{mode === 'auto' ? 'beat with your voice · dholak follows' : 'tap pads [A-F] · boom on left, slap on right'}</div>
         </div>
         <div className="controls-row">
           {mode === 'auto' && <AutoBadge active={autoActive} note={hit || '—'} />}
@@ -648,7 +817,7 @@ function DholakScreenComponent({ onBack, mode }) {
       </div>
       <div className="stage">
         <div className="drum-pads">
-          {pads.map(p => (
+          {pads.map((p, i) => (
             <div
               key={p.id}
               className={`drum-pad ${hit === p.id ? 'hit' : ''}`}
@@ -656,7 +825,7 @@ function DholakScreenComponent({ onBack, mode }) {
               onPointerDown={() => tap(p.id)}
             >
               {p.label}
-              <span className="sub">{p.sub}</span>
+              <span className="sub">{p.sub} ({['A', 'S', 'D', 'F'][i]})</span>
             </div>
           ))}
         </div>

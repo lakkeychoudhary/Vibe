@@ -6,15 +6,28 @@ Vibe is a pocket music studio that runs entirely in the browser and works fully 
 
 > Real instruments. Real touch. Real breath. A pocket music studio that runs offline.
 
+## 📺 Demo Video
+
+<video src="screenshots/demo.mp4" controls width="100%" style="border-radius: 12px; margin: 16px 0; max-height: 400px;"></video>
+
 ---
 
 ## 🚀 Key Features
 
 * **Multi-Instrument Synth Engines:** Play simulated acoustic and synthetic instruments including Piano, Flute, and more.
 * **Interactive Pitch Engine:** Sing or hum to detect real-time notes and trigger instrument tones.
+* **⌨️ Full Keyboard Mapping:** Perform naturally using your computer keyboard across all instruments.
 * **Responsive Visual Jam Interfaces:** Optimized for phones, tablets, and desktop computers with touch support.
 * **Fully Offline PWA:** Installable on home screens (iOS/Android) and powered by service workers for offline loading.
 * **Zero-Build Architecture:** Utilizes `@babel/standalone` and React via CDN, allowing it to run instantly without complex compilation.
+
+### ⌨️ Keyboard Layout Map
+
+Play like a pro using your computer's keyboard:
+* **Piano / Harmonium / Sitar / Violin:** Use `A`, `S`, `D`, `F`, `G`, `H`, `J`, `K`, `L`, `;`, `'` to play notes within the selected scale.
+* **Guitar:** Pluck strings E, A, D, G, B, e with keys `1`, `2`, `3`, `4`, `5`, `6`. Strum chords C, G, Am, F, D, Em, Dm using keys `Q`, `W`, `E`, `R`, `T`, `Y`, `U`.
+* **Tabla:** Trigger bols Dha, Dhin, Na, Tin, Ge, Ka using `A`, `S`, `D`, `F`, `G`, `H`.
+* **Drum Kit & Dholak:** Hit drum pads using keys `A`, `S`, `D`, `F`.
 
 ---
 

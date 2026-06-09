@@ -45,7 +45,7 @@ function PianoScreen({ onBack, mode }) {
     const map = 'asdfghjkl;\''.split('');
     const handle = (e) => {
       if (e.repeat) return;
-      const i = map.indexOf(e.key);
+      const i = map.indexOf(e.key.toLowerCase());
       if (i >= 0 && whites[i]) press(whites[i].midi);
     };
     window.addEventListener('keydown', handle);
@@ -131,13 +131,20 @@ function PianoScreen({ onBack, mode }) {
             <div className="piano-keys">
               {whites.map((k, i) => {
                 const inScale = scaleMembers.has(k.midi % 12);
+                const keysHint = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'"];
                 return (
                   <div
                     key={k.midi}
                     className={`key-white ${active.has(k.midi) ? 'active' : ''} ${inScale ? 'in-scale' : ''}`}
                     onPointerDown={(e) => { e.preventDefault(); press(k.midi); }}
+                    style={{ position: 'relative' }}
                   >
                     {k.label.startsWith('C') ? k.label : ''}
+                    {keysHint[i] && (
+                      <span style={{ position: 'absolute', bottom: 4, fontSize: 10, opacity: 0.5, left: '50%', transform: 'translateX(-50%)', fontWeight: 'bold' }}>
+                        {keysHint[i]}
+                      </span>
+                    )}
                   </div>
                 );
               })}
