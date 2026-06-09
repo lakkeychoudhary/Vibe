@@ -8,7 +8,9 @@ Vibe is a pocket music studio that runs entirely in the browser and works fully 
 
 ## 📺 Demo Video
 
-<video src="https://github.com/lakkeychoudhary/Vibe/raw/main/screenshots/demo.mp4" controls width="100%" style="border-radius: 12px; margin: 16px 0; max-height: 400px;"></video>
+[![Watch the Vibe Demo Video](screenshots/landing.png)](https://github.com/lakkeychoudhary/Vibe/raw/main/screenshots/demo.mp4)
+
+*Click the image above to watch the Vibe demonstration video.*
 
 ---
 
