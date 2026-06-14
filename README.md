@@ -1,10 +1,10 @@
 # 🎵 Vibe — Offline Music Studio
 
 <img src="icon-192.png" align="right" width="120" alt="Vibe Icon" />
+Hey Hackclubbers!
+Vibe is a music intrument app made by me with help of AI to mimic real life intruments' sounds to the closest possible
 
-Vibe is a pocket music studio that runs entirely in the browser and works fully offline. Play, sing, and be the band using real-touch and real-breath web audio interfaces.
-
-> Real instruments. Real touch. Real breath. A pocket music studio that runs offline.
+> Realistically Possible instruments. Real touch of piano and violin like intruments,  Real breath for flute
 
 ## 📺 Demo Video
 
