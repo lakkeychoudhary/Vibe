@@ -68,4 +68,4 @@ This project auto-deploys to **GitHub Pages**. Every time I push to the `main` b
 
 ---
 
-Made with a lot of trial and error (and a few late nights) by me. Hope you have fun playing with it! 🎶
+Made with a lot of trial and error and also deleted hackatime folder by mistake and didn't noticed for hours - finally logged again, and then compile erros -t this and that - but still workin on it. Hope you have fun playing with it! 🎶
